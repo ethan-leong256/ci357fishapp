@@ -58,8 +58,11 @@ class ImageViewModel(application: Application) : AndroidViewModel(application) {
 
     private var currentBitmap: Bitmap? = null
     private var currentResult: FishRecognitionResult? = null
-
     private var fishClassifier: FishClassifier? = null
+
+    init {
+        FishDataHelper.load(getApplication<Application>().applicationContext)
+    }
 
     private fun getClassifier(): FishClassifier {
         return fishClassifier ?: FishClassifier(
@@ -111,13 +114,14 @@ class ImageViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 val (species, confidence) = getClassifier().classify(bitmap)
+                val info = FishDataHelper.getInfo(species)
 
                 val result = FishRecognitionResult(
-                    species = species,
-                    recommendedLures = "Check local guides",
-                    conditions = "Varies by species",
-                    bestTime = "Early morning, Late evening",
-                    bestSeason = "Spring, Fall",
+                    species = info.species,
+                    recommendedLures = info.lures,
+                    conditions = info.conditions,
+                    bestTime = info.bestTime,
+                    bestSeason = info.bestSeason,
                     confidence = confidence
                 )
 
