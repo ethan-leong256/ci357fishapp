@@ -141,5 +141,7 @@ save this alongside the model so that the output number match a custom class.
 # References
 - https://www.youtube.com/watch?v=o5c2BLrxNyA
 - https://www.youtube.com/watch?v=cvNtZqphr6A
+- https://developer.android.com/codelabs/digit-classifier-tflite#4
+- https://www.youtube.com/watch?v=gVJC1j2n9tE
 - https://www.tensorflow.org/api_docs
 - https://www.tensorflow.org/guide
