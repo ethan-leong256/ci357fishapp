@@ -135,3 +135,11 @@ with open("labels.json", "w") as f:
     json.dump(train_gen.class_indices, f)
 ```
 save this alongside the model so that the output number match a custom class.
+
+
+
+# References
+- https://www.youtube.com/watch?v=o5c2BLrxNyA
+- https://www.youtube.com/watch?v=cvNtZqphr6A
+- https://www.tensorflow.org/api_docs
+- https://www.tensorflow.org/guide
