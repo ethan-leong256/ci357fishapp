@@ -8,6 +8,10 @@ android {
     namespace = "com.example.fishial_recog"
     compileSdk = 35
 
+    aaptOptions {
+        noCompress += "tflite"
+    }
+
     defaultConfig {
         applicationId = "com.example.fishial_recog"
         minSdk = 24
@@ -33,6 +37,9 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
+    }
+    buildFeatures {
+        mlModelBinding = true
     }
     // Remove buildFeatures.compose entirely - plugin handles it
 }
@@ -62,4 +69,9 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+    implementation("org.tensorflow:tensorflow-lite-metadata:0.4.4")
+
 }

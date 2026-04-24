@@ -1,5 +1,6 @@
 package com.example.fishial_recog
 
+import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
@@ -7,7 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import androidx.compose.runtime.mutableStateListOf
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,20 +18,15 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
-// Data classes - what your ML code needs to return
-
-// THIS IS WHAT YOUR ML CODE MUST RETURN
-// Fill this object with the fish species and fishing tips
 data class FishRecognitionResult(
-    val species: String,           // e.g., "Smallmouth Bass"
-    val recommendedLures: String,  // e.g., "Ned rigs, Tubes, Swimbaits"
-    val conditions: String,        // e.g., "65-80°F, Clear water"
-    val bestTime: String,          // e.g., "Early morning, Late evening"
-    val bestSeason: String,        // e.g., "Spring, Fall"
-    val confidence: Float? = null  // Optional: 0.0 to 1.0
+    val species: String,
+    val recommendedLures: String,
+    val conditions: String,
+    val bestTime: String,
+    val bestSeason: String,
+    val confidence: Float? = null
 )
 
-// Saved catch record - auto created when user saves
 data class CatchRecord(
     val id: String = UUID.randomUUID().toString(),
     val species: String,
@@ -41,7 +37,6 @@ data class CatchRecord(
     val conditions: String
 )
 
-// UI state - handles loading, errors, and results
 data class PictureUiState(
     val selectedImageBitmap: Bitmap? = null,
     val isLoading: Boolean = false,
@@ -51,7 +46,7 @@ data class PictureUiState(
     val saveSuccess: Boolean = false
 )
 
-class ImageViewModel : ViewModel() {
+class ImageViewModel(application: Application) : AndroidViewModel(application) {
 
     val images = mutableStateListOf<String>()
 
@@ -64,11 +59,16 @@ class ImageViewModel : ViewModel() {
     private var currentBitmap: Bitmap? = null
     private var currentResult: FishRecognitionResult? = null
 
-    fun onCameraPermissionGranted() {
-        // Called after permission granted
+    private var fishClassifier: FishClassifier? = null
+
+    private fun getClassifier(): FishClassifier {
+        return fishClassifier ?: FishClassifier(
+            getApplication<Application>().applicationContext
+        ).also { fishClassifier = it }
     }
 
-    // Called when user takes a photo with camera
+    fun onCameraPermissionGranted() { }
+
     fun processCapturedImage(context: Context, bitmap: Bitmap) {
         currentBitmap = bitmap
         _uiState.value = _uiState.value.copy(
@@ -80,7 +80,6 @@ class ImageViewModel : ViewModel() {
         performRecognition(bitmap)
     }
 
-    // Called when user picks an image from gallery
     fun handleSelectedImage(context: Context, uri: Uri) {
         viewModelScope.launch {
             try {
@@ -108,46 +107,24 @@ class ImageViewModel : ViewModel() {
         }
     }
 
-    // ******************************
-    // PUT YOUR ML CODE HERE
-    // ******************************
-    // Input: bitmap (the fish photo)
-    // Output: FishRecognitionResult object
-    //
-    // Example of what to return:
-    // val result = FishRecognitionResult(
-    //     species = "Your detected species",
-    //     recommendedLures = "Your lure recommendations",
-    //     conditions = "Your conditions info",
-    //     bestTime = "Your best time info",
-    //     bestSeason = "Your best season info",
-    //     confidence = yourConfidenceScore
-    // )
-    // ******************************
     private fun performRecognition(bitmap: Bitmap) {
         viewModelScope.launch {
             try {
-                // Simulate processing delay (remove this)
-                delay(1500)
+                val (species, confidence) = getClassifier().classify(bitmap)
 
-                // TODO: REPLACE THIS MOCK CODE WITH YOUR ML RECOGNITION
-                // Example: val result = YourMLClassifier.identifyFish(bitmap)
-                // Example: val result = FishRecognitionService.recognize(bitmap)
-
-                // MOCK RESULT - DELETE THIS AND USE YOUR REAL RESULT
-                val mockResult = FishRecognitionResult(
-                    species = "Smallmouth Bass",
-                    recommendedLures = "Ned rigs, Tubes, Swimbaits",
-                    conditions = "65-80°F, Clear water",
+                val result = FishRecognitionResult(
+                    species = species,
+                    recommendedLures = "Check local guides",
+                    conditions = "Varies by species",
                     bestTime = "Early morning, Late evening",
                     bestSeason = "Spring, Fall",
-                    confidence = 0.92f
+                    confidence = confidence
                 )
 
-                currentResult = mockResult
+                currentResult = result
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    recognitionResult = mockResult
+                    recognitionResult = result
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -158,7 +135,6 @@ class ImageViewModel : ViewModel() {
         }
     }
 
-    // Saves the current catch to history
     fun saveCurrentCatch() {
         val bitmap = currentBitmap ?: return
         val result = currentResult ?: return
@@ -187,7 +163,6 @@ class ImageViewModel : ViewModel() {
         }
     }
 
-    // Deletes a catch from history
     fun deleteCatch(id: String) {
         _catchHistory.value = _catchHistory.value.filter { it.id != id }
     }
@@ -200,5 +175,11 @@ class ImageViewModel : ViewModel() {
         _uiState.value = PictureUiState()
         currentBitmap = null
         currentResult = null
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        fishClassifier?.close()
+        fishClassifier = null
     }
 }
