@@ -1,8 +1,8 @@
 # Deliverables
 
-Presentation Slides:
-Tutorial Video:
-Tutorial Video + Slides:
+Presentation Slides: https://docs.google.com/presentation/d/1YAJR2flF3P59fb_ojZiQZAOaFw-aOG20trYcM_r8Xhk/edit?usp=sharing
+Tutorial Video: https://drive.google.com/file/d/1ya5x2sIyLwmeqxsMu1I_kFUR6VLPlDxG/view?usp=sharing
+Tutorial Video + Slides: https://drive.google.com/file/d/10dVe4IRqOmVs3Z9ZuN2IYW27J6YTeDPi/view?usp=sharing
 
 # Making a Custom Model
 To get started with your own image recognition software you will have to start a new python project and import these libraries.
