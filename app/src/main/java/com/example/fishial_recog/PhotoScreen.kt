@@ -1,11 +1,5 @@
 package com.example.fishial_recog
 
-import android.Manifest
-import android.graphics.Bitmap
-import android.graphics.ImageDecoder
-import android.net.Uri
-import android.os.Build
-import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -19,9 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -32,27 +24,25 @@ fun PictureScreen(
     navController: NavController,
     imageViewModel: ImageViewModel,
     onRequestCameraPermission: () -> Unit,
-    onLaunchGallery: () -> Unit
+    onLaunchGallery: () -> Unit,
+    onLaunchCamera: () -> Unit
 ) {
-    val context = LocalContext.current
     val scrollState = rememberScrollState()
-
-    // Camera launcher
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap ->
-        bitmap?.let { imageViewModel.processCapturedImage(context, it) }
-    }
-
-    // UI State from ViewModel
     val uiState by imageViewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        imageViewModel.resetUiState()
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Identify Fish") },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = {
+                        imageViewModel.resetUiState()
+                        navController.popBackStack()
+                    }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
@@ -116,14 +106,7 @@ fun PictureScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Button(
-                    onClick = {
-                        // Check permission first
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            onRequestCameraPermission()
-                        } else {
-                            cameraLauncher.launch(null)
-                        }
-                    },
+                    onClick = onLaunchCamera,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp)
                 ) {
@@ -176,9 +159,8 @@ fun PictureScreen(
 
             if (uiState.saveSuccess) {
                 LaunchedEffect(Unit) {
-                    navController.navigate(Screen.History.route) {
-                        popUpTo(Screen.Picture.route) { inclusive = true }
-                    }
+                    navController.navigate(Screen.History.route)
+                    imageViewModel.resetUiState()
                 }
             }
         }
